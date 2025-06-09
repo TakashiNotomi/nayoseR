@@ -30,8 +30,9 @@ launch_nayose_app <- function() {
   )
 
   server <- function(input, output, session) {
-    match_df <- shiny::reactiveVal(utils::read.csv("match_result.csv", stringsAsFactors = FALSE))
-    confirmed <- shiny::reactiveVal(data.frame(name_a = character(), name_b = character(), similarity = numeric(), status = character()))
+    original_df <- utils::read.csv("match_result.csv", stringsAsFactors = FALSE)
+    match_df <- shiny::reactiveVal(original_df)
+    confirmed <- shiny::reactiveVal(data.frame(name_a = character(), name_b = character(), similarity = numeric(), status = character(), stringsAsFactors = FALSE))
 
     output$table <- DT::renderDT({
       filtered <- match_df()[match_df()$similarity >= input$threshold, ]
@@ -40,25 +41,42 @@ launch_nayose_app <- function() {
 
     shiny::observeEvent(input$approve, {
       selected <- input$table_rows_selected
-      if (length(selected) > 0) {
-        row <- match_df()[selected, ]
+      filtered <- match_df()[match_df()$similarity >= input$threshold, ]
+      if (length(selected) > 0 && nrow(filtered) >= selected) {
+        row <- filtered[selected, ]
         row$status <- "approved"
         confirmed(rbind(confirmed(), row))
+
+        # 削除対象をoriginal match_dfから除去
+        new_df <- match_df()
+        to_remove <- which(new_df$name_a == row$name_a & new_df$name_b == row$name_b)
+        if (length(to_remove) > 0) {
+          match_df(new_df[-to_remove, ])
+        }
       }
     })
 
     shiny::observeEvent(input$reject, {
       selected <- input$table_rows_selected
-      if (length(selected) > 0) {
-        row <- match_df()[selected, ]
+      filtered <- match_df()[match_df()$similarity >= input$threshold, ]
+      if (length(selected) > 0 && nrow(filtered) >= selected) {
+        row <- filtered[selected, ]
         row$status <- "rejected"
         confirmed(rbind(confirmed(), row))
+
+        # 削除対象をoriginal match_dfから除去
+        new_df <- match_df()
+        to_remove <- which(new_df$name_a == row$name_a & new_df$name_b == row$name_b)
+        if (length(to_remove) > 0) {
+          match_df(new_df[-to_remove, ])
+        }
       }
     })
 
     shiny::observeEvent(input$save_csv, {
-      utils::write.csv(confirmed(), "nayose_dict.csv", row.names = FALSE)
-      shiny::showNotification("Saved successfully!")
+      approved <- confirmed()[confirmed()$status == "approved", ]
+      utils::write.csv(approved, "nayose_dict.csv", row.names = FALSE)
+      shiny::showNotification("Save!")
     })
 
     output$confirmed_table <- DT::renderDT({
