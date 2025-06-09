@@ -1,0 +1,21 @@
+Package: nayoseR
+Type: Package
+Title: Semantic Name Matching and Deduplication using SBERT
+Version: 0.1.0
+Author: Takashi Notomi
+Maintainer: Takashi Notomi <noutomi0729@gmail.com>
+Description: Provides a hybrid R and Python interface for semantic name matching 
+    and deduplication tasks. Useful for fuzzy and semantic record linkage in 
+    government datasets and business applications. Leverages SBERT (Sentence-BERT) 
+    embeddings via the 'reticulate' package to compute cosine similarity between strings, 
+    and includes a Shiny interface for human-in-the-loop validation. Supports 
+    automatic matching using approved dictionary entries for reproducible name merging.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Depends: R (>= 4.0.0)
+Imports: 
+    reticulate,
+    shiny,
+    DT
+RoxygenNote: 7.3.1
